@@ -1,0 +1,35 @@
+services:
+  # Servicio de la API de Node.js
+  config-api:
+    build: .
+    container_name: mi-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - database
+    networks:
+      - api-network
+
+  # Servicio de la Base de Datos de MongoDB
+  database:
+    image: mongo:latest
+    container_name: mi-mongo-db
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - api-network
+
+volumes:
+  mongo-data:
+
+networks:
+  api-network:
+    driver: bridge
