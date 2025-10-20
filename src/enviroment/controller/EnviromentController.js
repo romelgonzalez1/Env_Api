@@ -45,7 +45,7 @@ class EnviromentController {
    *       404:
    *         description: Agency not found
    */
-    static async getEnviromentData(req, res) {
+    static async getEnviromentByName(req, res) {
         try {
             const result = await this._service.getEnviromentByName(req.params.env_name);
             if (!result.isSuccess()) {

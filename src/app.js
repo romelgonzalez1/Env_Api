@@ -10,7 +10,7 @@ require('dotenv').config();
 // console.log('Contenido de SPECS:', JSON.stringify(specs, null, 2));
 
 var indexRouter = require('../routes/index');
-var usersRouter = require('../routes/users');
+var UsersRouter = require('./user/routes/UserRoutes.js');
 var EnviromentRoutes = require('./enviroment/routes/EnviromentRoutes.js');
 
 var app = express();
@@ -43,7 +43,7 @@ const swaggerUiOptions = {
 app.use('/api', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/users', UsersRouter);
 app.use('/enviroments', EnviromentRoutes);
 
 connectDB();

@@ -5,6 +5,6 @@ const authenticate = require('../../core/auth/auth')
 
 const enviromentController = new EnviromentController()
 
-router.get('/:env_name', EnviromentController.getEnviromentData.bind(enviromentController));
+router.get('/:env_name', authenticate, EnviromentController.getEnviromentByName.bind(enviromentController));
 
 module.exports = router;
