@@ -17,4 +17,6 @@ router.patch('/:env_name', authenticate, EnviromentController.partialUpdateEnvir
 
 router.delete('/:env_name', authenticate, EnviromentController.deleteEnviroment.bind(enviromentController));
 
+router.get('/:env_name/.json', authenticate, EnviromentController.getVariablesJsonByEnviroment.bind(enviromentController));
+
 module.exports = router;

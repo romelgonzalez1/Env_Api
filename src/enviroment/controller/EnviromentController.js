@@ -1,5 +1,6 @@
 const Result = require('../../core/result-handler//result');
 const EnviromentService = require('../service/EnviromentService')
+const VariableService = require('../../variable/service/VariableService')
 
 /**
  * @swagger
@@ -20,6 +21,7 @@ const EnviromentService = require('../service/EnviromentService')
 class EnviromentController {
     constructor(enviromentService) {
         this._service = new EnviromentService();
+        this._variableService = new VariableService();
     }
 
     /**
@@ -247,6 +249,46 @@ class EnviromentController {
             }
         } catch (error) {
             res.status(500).json({ message: 'Error deleting environment', error: error.message });
+        }
+    }
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/.json:
+     *   get:
+     *     summary: Devuelve el json de variables de un entorno
+     *     tags: [Enviroment]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema:
+     *          type: string
+     *         description: Nombre del entorno
+     *     responses:
+     *       201:
+     *         description: Entorno creado exitosamente
+     *       400:
+     *         description: Datos de entrada inválidos
+     *       401:
+     *         description: No autorizado
+     *       409:
+     *         description: El entorno ya existe
+     */
+    static async getVariablesJsonByEnviroment(req, res) {
+        try {
+            var env_name = req.params.env_name;
+            env_name = env_name.replace('.json', '');
+            const result = await this._variableService.getVariablesJsonByEnviroment(env_name);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error creating variable', error: error.message });
         }
     }
 

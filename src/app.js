@@ -12,6 +12,8 @@ require('dotenv').config();
 var indexRouter = require('../routes/index');
 var UsersRouter = require('./user/routes/UserRoutes.js');
 var EnviromentRoutes = require('./enviroment/routes/EnviromentRoutes.js');
+var VariableRoutes = require('./variable/routes/VariableRoutes.js');
+var VariableJsonRoute = require('./variable/routes/VariablesJsonRoute.js');
 
 var app = express();
 
@@ -45,6 +47,8 @@ app.use('/api', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
 app.use('/', indexRouter);
 app.use('/users', UsersRouter);
 app.use('/enviroments', EnviromentRoutes);
+app.use('/enviroments/:env_name/variables', VariableRoutes);
+app.use('/enviroments/:env_name', VariableJsonRoute);
 
 connectDB();
 

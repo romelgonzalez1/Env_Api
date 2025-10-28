@@ -1,6 +1,7 @@
 services:
   # Servicio de la API de Node.js
   config-api:
+    image: romelx8/config-api
     build: .
     container_name: mi-api
     ports:
