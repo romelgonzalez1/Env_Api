@@ -4,8 +4,10 @@ const EnviromentService = require('../service/EnviromentService')
 /**
  * @swagger
  * tags:
- *   name: Enviroment
- *   description: Enviroment management
+ *   - name: Enviroment
+ *     description: Enviroment management
+ *   - name: Environment Variables
+ *     description: Gestión de variables dentro de un entorno específico.
  */
 
 /**
@@ -14,7 +16,8 @@ const EnviromentService = require('../service/EnviromentService')
  *   schemas:
  *     Enviroment:
  *       type: object
- *         
+ *     Variable:
+ *       type: object
  */
 
 class EnviromentController {
@@ -250,6 +253,270 @@ class EnviromentController {
         }
     }
 
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables:
+     *   get:
+     *     summary: Listar todas las variables de un entorno con paginación
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *       - in: query
+     *         name: page
+     *         schema: { type: integer, default: 1 }
+     *       - in: query
+     *         name: limit
+     *         schema: { type: integer, default: 10 }
+     *     responses:
+     *       '200':
+     *         description: OK
+     */
+    static async getVariable(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const result = await this._service.getVariable(req.params.env_name, page, limit);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error getting variable', error: error.message });
+        }
+    }
+
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables/{var_name}:
+     *   get:
+     *     summary: Obtener una variable específica por su nombre
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *       - in: path
+     *         name: var_name
+     *         required: true
+     *         schema: { type: string }
+     *     responses:
+     *       '200': { description: "OK" }
+     *       '404': { description: "Entorno o variable no encontrados" }
+     */
+    static async getVariableByName(req, res) {
+        try {
+            const result = await this._service.getVariableByName(req.params.env_name, req.params.var_name);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error getting variable by name', error: error.message });
+        }
+    }
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables:
+     *   post:
+     *     summary: Crear una nueva variable en un entorno
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/Variable'
+     *           example:
+     *             name: "LOG_LEVEL"
+     *             value: "WARNING"
+     *             description: "Nivel de criticidad para los logs de la aplicación."
+     *             is_sensitive: false
+     *     responses:
+     *       '201': { description: "Variable creada" }
+     *       '409': { description: "La variable ya existe o el entorno no fue encontrado" }
+     */
+    static async addVariable(req, res) {
+        try {
+            const result = await this._service.addVariable(req.params.env_name, req.body);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error adding variable', error: error.message });
+        }
+    }
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables/{var_name}:
+     *   put:
+     *     summary: Actualizar una variable (reemplazo completo)
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *       - in: path
+     *         name: var_name
+     *         required: true
+     *         schema: { type: string }
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/Variable'
+     *     responses:
+     *       '200': { description: "Variable actualizada" }
+     *       '404': { description: "Entorno o variable no encontrados" }
+     */
+    static async updateVariable(req, res) {
+        try {
+            const result = await this._service.updateVariable(req.params.env_name, req.params.var_name, req.body);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error updating variable', error: error.message });
+        }
+    }
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables/{var_name}:
+     *   patch:
+     *     summary: Actualizar parcialmente una variable
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *       - in: path
+     *         name: var_name
+     *         required: true
+     *         schema: { type: string }
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/Variable'
+     *     responses:
+     *       '200': { description: "Variable actualizada" }
+     *       '404': { description: "Entorno o variable no encontrados" }
+     */
+    static async patchVariable(req, res) {
+        try {
+            const result = await this._service.patchVariable(req.params.env_name, req.params.var_name, req.body);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error patching variable', error: error.message });
+        }
+    }
+
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}/variables/{var_name}:
+     *   delete:
+     *     summary: Eliminar una variable de un entorno
+     *     tags: [Environment Variables]
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *       - in: path
+     *         name: var_name
+     *         required: true
+     *         schema: { type: string }
+     *     responses:
+     *       '204': { description: "Variable eliminada" }
+     *       '404': { description: "Entorno o variable no encontrados" }
+     */
+    static async deleteVariable(req, res) {
+        try {
+            const result = await this._service.deleteVariable(req.params.env_name, req.params.var_name);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error deleting variable', error: error.message });
+        }
+    }
+
+    /**
+     * @swagger
+     * /enviroments/{env_name}.json:
+     *   get:
+     *     summary: Obtener configuración en formato JSON plano (Consumo Masivo)
+     *     tags: [Environments]
+     *     description: Devuelve todas las variables de un entorno en un objeto JSON plano clave-valor.
+     *     security: [{ bearerAuth: [] }]
+     *     parameters:
+     *       - in: path
+     *         name: env_name
+     *         required: true
+     *         schema: { type: string }
+     *         description: "El nombre del entorno"
+     *     responses:
+     *       '200':
+     *         description: Configuración obtenida exitosamente.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               additionalProperties: true
+     *               example:
+     *                 DB_URL: "postgres://user:pass@host/db"
+     *                 FEATURE_FLAG_X: "true"
+     *       '404':
+     *         description: Entorno no encontrado.
+     */
+    static async getFlatJson(req, res) {       
+        try {
+            const envName = req.params.env_name;
+            const result = await this._service.getFlatJson(envName);
+            if (!result.isSuccess()) {
+                return res.status(result.StatusCode).json({ error: result.Error.message });
+            } else {
+                return res.status(result.StatusCode).json(result.Value);
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error getting flat JSON', error: error.message });
+        }
+    }
 }
 
 module.exports = EnviromentController;

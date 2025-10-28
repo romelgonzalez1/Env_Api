@@ -81,6 +81,121 @@ class EnviromentRepository{
         }
     }
 
+    async findVariable(envName, page, limit) {
+        try {
+            const environment = await this.EnviromentModel.findOne({ name: envName });
+            if (!environment) {
+                return Result.fail(null, 404, `El entorno "${envName}" no fue encontrado.`);
+            }
+
+            const allVariables = environment.variables;
+            const total = allVariables.length;
+            const skip = (page - 1) * limit;
+            const paginatedVariables = allVariables.slice(skip, skip + limit);
+
+            const data = {
+                total: total,
+                variables: paginatedVariables
+            };
+            return Result.success(data, 200);
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al buscar las variables.');
+        }
+    }
+
+    async findVariableByName(envName, varName) {
+        try {
+            const environment = await this.EnviromentModel.findOne({ name: envName });
+            if (!environment) {
+                return Result.fail(null, 404, `El entorno "${envName}" no fue encontrado.`);
+            }
+            const variable = environment.variables.find(v => v.name === varName);
+            if (!variable) {
+                return Result.fail(null, 404, `La variable "${varName}" no existe en el entorno "${envName}".`);
+            }
+            return Result.success(variable, 200);
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al buscar la variable.');
+        }
+    }
+
+    async addVariable(envName, variableData) {
+        try {
+            const environment = await this.EnviromentModel.findOne({ 
+                name: envName, 
+                'variables.name': { $ne: variableData.name }
+            });
+
+            if (!environment) {
+                return Result.fail(null, 409, `El entorno "${envName}" no existe o ya contiene una variable llamada "${variableData.name}".`);
+            }
+            environment.variables.push(variableData);
+            await environment.save();
+        
+            const newVar = environment.variables[environment.variables.length - 1];
+            return Result.success(newVar, 201);
+
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al añadir la variable.');
+        }
+    }
+    
+    async updateVariable(envName, varName, variableData) {
+        try {
+            const result = await this.EnviromentModel.findOneAndUpdate(
+                { name: envName, "variables.name": varName },
+                { $set: { "variables.$": { ...variableData, name: varName } } },
+                { new: true }
+            );
+
+            if (!result) {
+                return Result.fail(null, 404, `No se encontró el entorno "${envName}" o la variable "${varName}".`);
+            }
+            const updatedVar = result.variables.find(v => v.name === varName);
+            return Result.success(updatedVar, 200);
+
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al actualizar la variable.');
+        }
+    }
+
+    async patchVariable(envName, varName, variableData) {
+        try {
+            const environment = await this.EnviromentModel.findOne({ name: envName });
+            if (!environment) {
+                return Result.fail(null, 404, `El entorno "${envName}" no fue encontrado.`);
+            }
+            const variable = environment.variables.find(v => v.name === varName);
+            if (!variable) {
+                return Result.fail(null, 404, `La variable "${varName}" no existe en el entorno "${envName}".`);
+            }
+            Object.assign(variable, variableData);
+            await environment.save();
+            return Result.success(variable, 200);
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al actualizar la variable.');
+        }
+    }
+    
+    async deleteVariable(envName, varName) {
+        try {
+            const result = await this.EnviromentModel.findOneAndUpdate(
+                { name: envName },
+                { $pull: { variables: { name: varName } } }
+            );
+
+            if (!result || !result.variables.some(v => v.name === varName)) {
+                return Result.fail(null, 404, `No se encontró el entorno "${envName}" o la variable "${varName}".`);
+            }
+
+            return Result.success(null, 204);
+        } catch (error) {
+            return Result.fail(error, 500, 'Error interno al eliminar la variable.');
+        }
+    }
+
+
+
 }
 
 module.exports = EnviromentRepository;
